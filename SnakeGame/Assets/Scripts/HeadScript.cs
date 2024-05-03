@@ -12,7 +12,7 @@ public class HeadScript : MonoBehaviour
     Vector3 actualposition = new Vector3((float)0.5, (float)0.5, 0);
     Vector3 auxiliarswap;
     Vector3 zero = new Vector3(0, 0, 0);
-    float standby = 0;
+    float lastUpdate = 0;
     int snakesize = 2;
     bool Keyed = false;
     bool[] block;
@@ -22,14 +22,16 @@ public class HeadScript : MonoBehaviour
     public Sprite turn;
     public Sprite tail;
     public Sprite darkGrass;
-    GameObject FruitObject = new GameObject("Fruit", typeof(SpriteRenderer));
+    GameObject FruitObject;
     GameObject[] snakebody;
     GameObject[] obstacles;
 
-    [SerializeField] float speed = 50;
-    [SerializeField] float speedfact = 40;
-    [SerializeField] int requiredToWin = 40;
-    [SerializeField] int obstaclesQuanty = 10;
+    int MaxX = 13;
+    int MaxY = 6;
+    [SerializeField] float speed = 40;
+    [SerializeField] float speedfact = 20;
+    [SerializeField] int requiredToWin = 25;
+    [SerializeField] int obstaclesQuanty = 20;
 
 
     private float Abs(float val)
@@ -39,14 +41,20 @@ public class HeadScript : MonoBehaviour
     }
     private void Start()
     {
-        block = new bool[250];
+        lastUpdate = 0;
+        block = new bool[3*MaxX*3*MaxY];
         oldrotatebody = new Vector3[50];
-        snakebody = new GameObject[50];
-        obstacles = new GameObject[50];
+        snakebody = new GameObject[100];
+        obstacles = new GameObject[100];
         if (obstaclesQuanty > 49) obstaclesQuanty = 49;
         if (requiredToWin > 70) requiredToWin = 70;
 
-        snakebody[0] = new GameObject("Tail", typeof(SpriteRenderer));
+        for(int i = 0; i < 50; i++)
+        {
+            snakebody[i] = new GameObject("Body", typeof(SpriteRenderer));
+        }
+
+        snakebody[0].name = "Tail";
         snakebody[0].GetComponent<SpriteRenderer>().sprite = tail;
         snakebody[0].transform.position = new Vector3((float)0.5, (float)0.5, 0);
 
@@ -57,8 +65,12 @@ public class HeadScript : MonoBehaviour
             do
             {
                 obstaclepos = zero;
-                while(block[(int)obstaclepos.x+14 + (int)obstaclepos.y+5*27] == true)obstaclepos = new Vector3(Random.Range(-14, 13), Random.Range(-5, 4), 0);
-                block[(int)obstaclepos.x + 14 + (int)obstaclepos.y + 5 * 27] = true;
+                do
+                {
+                    obstaclepos =
+                        new Vector3(Random.Range(-MaxX - 1, MaxX), Random.Range(-MaxY - 1, MaxY), 0);
+                } while (block[(int)obstaclepos.x + MaxX + 1 + ((int)obstaclepos.y + MaxY + 1) * (MaxX * 2 + 1)] == true);
+                block[(int)obstaclepos.x + MaxX + 1 + ((int)obstaclepos.y + MaxY + 1) * (MaxX * 2 + 1)] = true;
                 obstaclepos.x += (float)0.5;
                 obstaclepos.y += (float)0.5;
             } while (Abs(obstaclepos.x - transform.position.x)<=(obstaclesQuanty/8) &&
@@ -72,9 +84,11 @@ public class HeadScript : MonoBehaviour
         FruitObject.GetComponent<SpriteRenderer>().sprite = Frt;
         do
         {
-            newfruitpos = zero;
-            while (block[(int)newfruitpos.x + 14 + (int)newfruitpos.y + 5 * 27] == true) newfruitpos = new Vector3(Random.Range(-14, 13), Random.Range(-5, 4), 0);
-            //block[(int)newfruitpos.x + 14 + (int)newfruitpos.y + 5 * 27] = true;
+            do
+            {
+                newfruitpos =
+                    new Vector3(Random.Range(-MaxX - 1, MaxX), Random.Range(-MaxY - 1, MaxY), 0);
+            }while (block[(int)newfruitpos.x + MaxX + 1 + ((int)newfruitpos.y + MaxY + 1) * (MaxX * 2 + 1)] == true);
             newfruitpos.x += (float)0.5;
             newfruitpos.y += (float)0.5;
         } while ((newfruitpos.x - transform.position.x) == 0 &&
@@ -95,7 +109,7 @@ public class HeadScript : MonoBehaviour
         {
             if (obstacles[i].transform.position == transform.position) die = true;
         }
-        if (transform.position.x > 13.5 || transform.position.x < -13.5 || transform.position.y > 4.5 || transform.position.y < -4.5) die = true;
+        if (transform.position.x > MaxX+.5 || transform.position.x < -MaxX-.5 || transform.position.y > MaxY+.5 || transform.position.y < -MaxY-.5) die = true;
         if (die)
         {
             string currentSceneName = SceneManager.GetActiveScene().name;
@@ -148,9 +162,11 @@ public class HeadScript : MonoBehaviour
     {
         do
         {
-            newfruitpos = zero;
-            while (block[(int)newfruitpos.x + 14 + (int)newfruitpos.y + 5 * 27] == true) newfruitpos = new Vector3(Random.Range(-14, 13), Random.Range(-5, 4), 0);
-            //block[(int)newfruitpos.x + 14 + (int)newfruitpos.y + 5 * 27] = true;
+            do
+            {
+                newfruitpos =
+                    new Vector3(Random.Range(-MaxX - 1, MaxX), Random.Range(-MaxY - 1, MaxY), 0);
+            } while (block[(int)newfruitpos.x + MaxX + 1 + ((int)newfruitpos.y + MaxY + 1) * (MaxX * 2 + 1)] == true);
             newfruitpos.x += (float)0.5;
             newfruitpos.y += (float)0.5;
         } while ((newfruitpos.x - transform.position.x) == 0 &&
@@ -158,7 +174,7 @@ public class HeadScript : MonoBehaviour
         newfruitpos.z = -1;
         FruitObject.transform.position = newfruitpos;
 
-        snakebody[snakesize - 1] = new GameObject("Body", typeof(SpriteRenderer));
+        snakebody[snakesize - 1].name = "Tail";
         snakebody[snakesize - 1].transform.position = positionchanger;
         snakesize++;
         BodyRotate();
@@ -177,7 +193,6 @@ public class HeadScript : MonoBehaviour
 
     void Update()
     {
-        standby++;
 
         if (Input.GetKey(KeyCode.W) && movement.y != -1) {
             movement.x = 0;
@@ -212,7 +227,7 @@ public class HeadScript : MonoBehaviour
 
         }
 
-        if (standby >= speed || Keyed)
+        if (Time.time >= speed/60f + lastUpdate || Keyed)
         {
             positionchanger = transform.position;
             transform.position = movement + positionchanger;
@@ -221,7 +236,7 @@ public class HeadScript : MonoBehaviour
 
             transform.Rotate(rotate - oldrotate);
             oldrotate = rotate;
-            standby = 0;
+            lastUpdate = Time.time;
             Keyed = false;
 
             if (newfruitpos == actualposition)
